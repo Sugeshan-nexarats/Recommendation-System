@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+#Testing files
+check_db.py
+inspect_schema.py
+server_err.txt
+server_out.txt
+test_e2e_pipeline.py
+test_profile_visibility.py
+test_relationship_feature.py
+test_relationship_signal.py
+test_visibility.py
