@@ -10,12 +10,7 @@ class LinearDecayFunction(AbstractDecayFunction):
         return "linear"
 
     def apply(self, age_hours: float, config: FreshnessConfig) -> float:
-        """
-        Compute linear decay: 1 - age / half_life, floored at 0.
-        Naturally hits 0.0 at 2× half_life_hours.
-        The max_age_hours gate in FreshnessFeature applies an additional
-        hard cutoff if max_age < 2× half_life.
-        """
+        """ Compute linear decay: 1 - age / half_life, floored at 0."""
         if age_hours <= 0.0:
             return 1.0
 
