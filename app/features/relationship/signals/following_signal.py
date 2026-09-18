@@ -1,29 +1,3 @@
-"""
-FollowingSignal — asymmetric following relationship proximity.
-
-Signal semantics:
-    A user who follows an author has expressed explicit, persistent interest
-    in that creator's content.  Following is weaker than mutual friendship
-    (it is unidirectional) but stronger than no connection.
-
-Schema limitation:
-    Post.author_id is not available.  The proxy uses the same friend-count
-    field as FriendshipSignal but applies it only when user.following_ids
-    is non-empty.  This means the signal degrades to the same count-based
-    proxy as FriendshipSignal when both are active.
-
-    When Post.author_id is available, the exact check is:
-        score = 1.0 if post.author_id in user.following_ids else 0.0
-
-Score formula (proxy):
-    score = min(post.friends, cap.friends) / cap.friends
-    → 0.0 if user follows no one or post has no friend connections.
-
-Note: The proxy score will be identical to FriendshipSignal's when both
-fire.  The weight difference in RelationshipConfig (friendship=3.0,
-following=2.0) ensures they still contribute proportionally different
-amounts to the final score.
-"""
 
 from __future__ import annotations
 

@@ -1,5 +1,9 @@
+
+
 from __future__ import annotations
+
 import logging
+
 from app.models.posts import Post
 from app.repositories.abstract_post_repository import AbstractPostRepository
 from app.retrievers.abstract_retriever import AbstractRetriever
@@ -9,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class RecentRetriever(AbstractRetriever):
-    
+ 
+
     def __init__(self, repository: AbstractPostRepository) -> None:
         self._repository = repository
 
@@ -18,6 +23,7 @@ class RecentRetriever(AbstractRetriever):
         return "recent_retriever"
 
     def retrieve(self, user: UserContext, limit: int) -> list[Post]:
+     
         logger.debug(
             "RecentRetriever: fetching %d recent posts for user_id=%d.",
             limit,

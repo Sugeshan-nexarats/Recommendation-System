@@ -1,5 +1,8 @@
+
 from __future__ import annotations
+
 import logging
+
 from app.features.abstract_feature import AbstractFeature, FeatureResult
 from app.features.feature_registry import FeatureRegistry
 from app.features.freshness.abstract_age_provider import AbstractAgeProvider
@@ -12,12 +15,13 @@ from app.retrievers.user_context import UserContext
 
 logger = logging.getLogger(__name__)
 
+# Maximum raw score on the 0-100 rubric.
 _MAX_SCORE: float = 100.0
 
 
 @FeatureRegistry.register
 class FreshnessFeature(AbstractFeature):
-   
+    
     def __init__(
         self,
         config:         FreshnessConfig          | None = None,
@@ -38,6 +42,8 @@ class FreshnessFeature(AbstractFeature):
         cfg = self._config
 
         age_hours: float = self._age_provider.age_hours(post)
+
+        # Sentinel returned by provider when age is indeterminate.
         if age_hours == float("inf"):
             return self._stale_result(
                 age_hours=age_hours,
@@ -47,8 +53,13 @@ class FreshnessFeature(AbstractFeature):
         if age_hours >= cfg.max_age_hours:
             return self._stale_result(age_hours=age_hours, reason="max_age_exceeded")
 
+        
         multiplier: float = self._decay_function.apply(age_hours, cfg)
+
+        
         raw_score: float = cfg.floor_score + (_MAX_SCORE - cfg.floor_score) * multiplier
+
+      
         raw_score = min(max(raw_score, cfg.floor_score), _MAX_SCORE)
 
         logger.debug(
@@ -76,7 +87,7 @@ class FreshnessFeature(AbstractFeature):
 
 
     def _stale_result(self, age_hours: float, reason: str) -> FeatureResult:
-       
+        """Return a floor-score result for posts that are gated as stale."""
         floor = self._config.floor_score
         return FeatureResult(
             feature_name=self.name,
@@ -98,7 +109,16 @@ class FreshnessFeature(AbstractFeature):
         stale: bool,
         reason: str | None,
     ) -> dict:
-       
+        """
+        Build the observability metadata dict.
+
+        Sections:
+          freshness_score   — the 0-100 raw score (human-readable)
+          age               — estimated age diagnostics
+          decay             — decay function name, multiplier, config used
+          provider          — age provider name and proxy flag
+          config_snapshot   — active config values for A/B audit
+        """
         cfg = self._config
         meta: dict = {
             #0-100 raw score 
@@ -116,7 +136,7 @@ class FreshnessFeature(AbstractFeature):
             "age_provider":      self._age_provider.name,
             "proxy_mode":        self._age_provider.is_proxy,
 
-            # Config snapshot  
+            # Config snapshot (for A/B audit) 
             "config_snapshot": {
                 "half_life_hours": cfg.half_life_hours,
                 "max_age_hours":   cfg.max_age_hours,

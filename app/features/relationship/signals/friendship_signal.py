@@ -1,25 +1,3 @@
-"""
-FriendshipSignal — bidirectional friend connection proximity.
-
-Signal semantics:
-    Measures whether the post originates from within the user's mutual
-    friend network.  A post connected to many of the user's friends
-    scores higher than one connected to few.
-
-Schema limitation:
-    Post.friends is an aggregate count, not a list of friend IDs.
-    We cannot verify exact overlap with user.friend_ids today.
-    The proxy: if user has friends AND post has a non-zero friend count,
-    treat the post as socially proximate.  Score scales with friend count
-    up to the configured cap.
-
-    When Post.author_id is available, replace this with an exact check:
-        score = 1.0 if post.author_id in user.friend_ids else 0.0
-
-Score formula (proxy):
-    score = min(post.friends, cap.friends) / cap.friends
-    → 0.0 if user has no friends or post has no friend connections.
-"""
 
 from __future__ import annotations
 

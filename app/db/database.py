@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 DATABASE_URL: str = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg2://postgres:wifi6@localhost:5432/collabsterdb", #Change the DB path
+    "postgresql+psycopg2://postgres:wifi6@localhost:5432/collabsterdb",
 )
 
 engine = create_engine(

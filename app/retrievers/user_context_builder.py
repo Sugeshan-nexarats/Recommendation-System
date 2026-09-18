@@ -1,31 +1,45 @@
+
 from __future__ import annotations
+
 import logging
+
 from app.models.user_preference import UserPreference
 from app.models.user_relationship import UserRelationship
 from app.models.users import PROFILE_VISIBILITY_PUBLIC
-from app.repositories.abstract_user_preference_repository import (AbstractUserPreferenceRepository,)
-from app.repositories.abstract_user_relationship_repository import (AbstractUserRelationshipRepository,)
-from app.repositories.abstract_user_interaction_repository import (AbstractUserInteractionRepository,)
+from app.repositories.abstract_user_preference_repository import (
+    AbstractUserPreferenceRepository,
+)
+from app.repositories.abstract_user_relationship_repository import (
+    AbstractUserRelationshipRepository,
+)
+from app.repositories.abstract_user_interaction_repository import (
+    AbstractUserInteractionRepository,
+)
+from app.repositories.redis_user_interaction_repository import RedisUserInteractionRepository
 from app.retrievers.user_context import UserContext
 from app.models.interaction_weights import get_weight_for_interaction_type
 
 logger = logging.getLogger(__name__)
 
+
 class UserContextBuilder:
-    
+  
     def __init__(
         self,
         preference_repository: AbstractUserPreferenceRepository,
         relationship_repository: AbstractUserRelationshipRepository,
         interaction_repository: AbstractUserInteractionRepository,
         user_privacy_repo=None,  # UserPrivacyRepository | None
+        redis_interaction_repo: RedisUserInteractionRepository | None = None
     ) -> None:
         self._preference_repo    = preference_repository
         self._relationship_repo  = relationship_repository
         self._interaction_repo   = interaction_repository
         self._user_privacy_repo  = user_privacy_repo
+        self._redis_interaction_repo = redis_interaction_repo
 
     def build(self, user_id: int) -> UserContext:
+        
         profile_visibility = self._load_profile_visibility(user_id)
         preferences        = self._load_preferences(user_id)
         relationships      = self._load_relationships(user_id)
@@ -52,8 +66,9 @@ class UserContextBuilder:
             community_affinity=interaction_data["community_affinity"],
         )
 
-    def _load_profile_visibility(self, user_id: int) -> str:
 
+    def _load_profile_visibility(self, user_id: int) -> str:
+       
         if self._user_privacy_repo is None:
             return PROFILE_VISIBILITY_PUBLIC
         try:
@@ -67,6 +82,7 @@ class UserContextBuilder:
             return PROFILE_VISIBILITY_PUBLIC
 
     def _load_preferences(self, user_id: int) -> list[UserPreference]:
+     
         try:
             return self._preference_repo.get_by_user_id(user_id)
         except Exception:
@@ -78,7 +94,7 @@ class UserContextBuilder:
             return []
 
     def _load_relationships(self, user_id: int) -> list[UserRelationship]:
-
+       
         try:
             return self._relationship_repo.get_by_user_id(user_id)
         except Exception:
@@ -90,6 +106,7 @@ class UserContextBuilder:
             return []
 
     def _load_interactions(self, user_id: int) -> dict[str, list[str]]:
+       
         result = {
             "liked_tags": [],
             "watched_tags": [],
@@ -97,7 +114,33 @@ class UserContextBuilder:
             "interacted_tags": [],
             "community_affinity": {},
         }
+        
+    
+        if self._redis_interaction_repo:
+            try:
+                redis_state = self._redis_interaction_repo.get_derived_state(user_id)
+                if redis_state is not None:
+                    # Expand tags
+                    for tag, count in redis_state.get("tags:like", {}).items():
+                        result["liked_tags"].extend([tag] * count)
+                    for tag, count in redis_state.get("tags:save", {}).items():
+                        result["saved_tags"].extend([tag] * count)
+                    for tag, count in redis_state.get("tags:watch", {}).items():
+                        result["watched_tags"].extend([tag] * count)
+                    for tag, count in redis_state.get("tags:interact", {}).items():
+                        result["interacted_tags"].extend([tag] * count)
+                        
+                    # Copy communities
+                    result["community_affinity"] = redis_state.get("communities", {})
+                    
+                    logger.debug("UserContextBuilder: successfully loaded Redis derived interactions for user_id=%d", user_id)
+                    return result
+            except Exception as e:
+                logger.warning("UserContextBuilder: Redis derived state lookup failed for user_id=%d (%s). Falling back to PostgreSQL.", user_id, e)
+                
+        
         try:
+            idempotency_sets = {"like": set(), "save": set()}
             interactions = self._interaction_repo.get_interactions_with_posts_by_user_id(user_id)
             for interaction, post in interactions:
                 itype = interaction.interaction_type
@@ -122,6 +165,19 @@ class UserContextBuilder:
                         weight = get_weight_for_interaction_type(itype)
                         for comm in unique_communities:
                             result["community_affinity"][comm] = result["community_affinity"].get(comm, 0.0) + weight
+                            
+                # Track post_ids for backfill idempotency
+                if itype in ("like", "save"):
+                    idempotency_sets[itype].add(interaction.post_id)
+                    
+            
+            if self._redis_interaction_repo:
+                try:
+                    self._redis_interaction_repo.backfill_state(user_id, result, idempotency_sets)
+                    logger.debug("UserContextBuilder: successfully backfilled Redis derived interactions for user_id=%d", user_id)
+                except Exception as e:
+                    logger.warning("UserContextBuilder: failed to backfill Redis derived interactions for user_id=%d (%s)", user_id, e)
+            
             logger.info(
                 "Community affinity for user_id=%d: %s",
                 user_id,

@@ -11,7 +11,11 @@ logger = logging.getLogger(__name__)
 
 class CandidateGenerator:
 
-    def __init__(self, retrievers: list[AbstractRetriever], config: RetrievalConfig | None = None,) -> None:
+    def __init__(
+        self,
+        retrievers: list[AbstractRetriever],
+        config: RetrievalConfig | None = None,
+    ) -> None:
         if not retrievers:
             raise ValueError(
                 "CandidateGenerator requires at least one retriever. "
@@ -20,8 +24,13 @@ class CandidateGenerator:
         self._retrievers = retrievers
         self._config = config or RetrievalConfig()
 
+    @property
+    def target_pool_size(self) -> int:
+        """Target final eligible candidate pool size from config."""
+        return getattr(self._config, "candidate_pool_size", 100)
+
     def generate(self, request: FeedRequest, user: UserContext) -> list[Post]:
-        
+       
         logger.debug(
             "CandidateGenerator: user_id=%d  retrievers=%s  limits=%s",
             request.user_id,
@@ -38,8 +47,10 @@ class CandidateGenerator:
             len(raw_candidates),
             len(candidates),
         )
+
         return candidates
 
+   
     def _collect(self, user: UserContext) -> list[Post]:
         
         all_posts: list[Post] = []
@@ -55,7 +66,7 @@ class CandidateGenerator:
                     len(posts),
                     limit,
                 )
-            except Exception:  
+            except Exception:  # noqa: BLE001
                 logger.exception(
                     "CandidateGenerator: retriever '%s' raised an unexpected "
                     "exception and will be skipped.",
@@ -66,7 +77,7 @@ class CandidateGenerator:
 
     @staticmethod
     def _deduplicate(candidates: list[Post]) -> list[Post]:
-  
+       
         seen: set[int] = set()
         unique: list[Post] = []
         for post in candidates:

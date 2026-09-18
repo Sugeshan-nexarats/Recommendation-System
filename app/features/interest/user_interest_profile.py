@@ -4,20 +4,21 @@ from dataclasses import dataclass, field
 from app.retrievers.user_context import UserContext
 from app.models.interaction_weights import INTERACTION_SOURCE_WEIGHTS
 
+
+
 @dataclass(frozen=True)
 class UserInterestProfile:
-    """
-    Weighted snapshot of a user's accumulated topic interests.
-    """
+   
 
-    tag_weights: Counter      
-    community_ids: frozenset  
-    source_counts: dict       
-    
+    tag_weights: Counter      # tag → cumulative weight (float)
+    community_ids: frozenset  # frozenset[str]
+    source_counts: dict       # source_name → tag count contributed
+
     @classmethod
     def from_user_context(cls, user: UserContext) -> UserInterestProfile:
-    
+       
         weights: Counter = Counter()
+
         sources = (
             ("explicit",    user.interest_tags),
             ("saved",       user.saved_tags),

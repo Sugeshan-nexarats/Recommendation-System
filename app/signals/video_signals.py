@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import logging
+
 from app.models.posts import Post
 from app.signals.signal_context import SignalContext
 
@@ -9,12 +11,14 @@ _CONTENT_TYPE = "video"
 
 
 class VideoSignals:
-    
+
+
     @property
     def name(self) -> str:
         return "VideoSignals"
 
     def extract(self, post: Post) -> SignalContext:
+
         signals = {
             "watch_time": post.watch_time or 0,
             "likes":      post.likes      or 0,

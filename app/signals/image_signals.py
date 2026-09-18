@@ -1,5 +1,8 @@
+
 from __future__ import annotations
+
 import logging
+
 from app.models.posts import Post
 from app.signals.signal_context import SignalContext
 
@@ -7,13 +10,16 @@ logger = logging.getLogger(__name__)
 
 _CONTENT_TYPE = "image"
 
+
 class ImageSignals:
+
 
     @property
     def name(self) -> str:
         return "ImageSignals"
 
     def extract(self, post: Post) -> SignalContext:
+      
         signals = {
             "likes":      post.likes      or 0,
             "comments":   post.comments   or 0,

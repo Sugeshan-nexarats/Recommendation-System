@@ -25,8 +25,11 @@ assert (
 ), "InterestFeature scoring rubric does not sum to 100."
 
 
+
+
 @FeatureRegistry.register
 class InterestFeature(AbstractFeature):
+
 
     def __init__(
         self,
@@ -39,8 +42,11 @@ class InterestFeature(AbstractFeature):
         return "interest_overlap"
 
     def compute(self, user: UserContext, post: Post, signal_context=None) -> FeatureResult:
-       
+   
+      
         profile = UserInterestProfile.from_user_context(user)
+
+      
         post_tags: frozenset[str] = frozenset(
             str(t).strip().lower() for t in (post.tags or []) if str(t).strip()
         )
@@ -48,7 +54,7 @@ class InterestFeature(AbstractFeature):
             str(c) for c in (post.communities or [])
         )
 
-    
+        
         if profile.is_empty() and not post_tags:
             return FeatureResult(
                 feature_name=self.name,
@@ -59,17 +65,21 @@ class InterestFeature(AbstractFeature):
                 },
             )
 
-      
+       
         tag_sim: float = self._similarity.tag_similarity(profile, post_tags)
+
+       
         community_sim: float = self._similarity.community_similarity(
             profile, post_communities
         )
 
+        
         liked_match:      float = self._history_match(user.liked_tags,      post_tags)
         watched_match:    float = self._history_match(user.watched_tags,     post_tags)
         saved_match:      float = self._history_match(user.saved_tags,       post_tags)
         interacted_match: float = self._history_match(user.interacted_tags,  post_tags)
 
+      
         raw_score: float = (
             tag_sim          * _TAG_SIM_POINTS
             + community_sim  * _COMMUNITY_POINTS
@@ -79,7 +89,7 @@ class InterestFeature(AbstractFeature):
             + interacted_match * _INTERACTED_POINTS
         )
 
-        # Clamp to [0, 100] to guard against floating-point overshoot.
+      
         raw_score = min(max(raw_score, 0.0), _MAX_SCORE)
 
         logger.debug(
@@ -93,9 +103,13 @@ class InterestFeature(AbstractFeature):
 
         return FeatureResult(
             feature_name=self.name,
+            
             score=round(raw_score / _MAX_SCORE, 6),
             metadata={
+                
                 "raw_interest_score":   round(raw_score, 4),
+
+               
                 "tag_similarity":       round(tag_sim, 6),
                 "community_similarity": round(community_sim, 6),
                 "liked_match":          round(liked_match, 6),
@@ -103,6 +117,7 @@ class InterestFeature(AbstractFeature):
                 "saved_match":          round(saved_match, 6),
                 "interacted_match":     round(interacted_match, 6),
 
+               
                 "breakdown_pts": {
                     "tag_similarity":       round(tag_sim        * _TAG_SIM_POINTS, 4),
                     "community_similarity": round(community_sim  * _COMMUNITY_POINTS, 4),
@@ -112,21 +127,25 @@ class InterestFeature(AbstractFeature):
                     "interacted_match":     round(interacted_match * _INTERACTED_POINTS, 4),
                 },
 
+                
                 "profile_top_tags":     profile.top_tags(10),
                 "profile_total_weight": round(profile.total_weight(), 4),
                 "profile_source_counts": profile.source_counts,
                 "post_tag_count":       len(post_tags),
                 "post_community_count": len(post_communities),
+
                 "similarity_strategy":  self._similarity.name,
             },
         )
 
+   
     @staticmethod
     def _history_match(history_tags: list[str], post_tags: frozenset[str]) -> float:
-       
+        
         if not history_tags or not post_tags:
             return 0.0
 
+       
         history_set: frozenset[str] = frozenset(
             str(t).strip().lower() for t in history_tags if str(t).strip()
         )

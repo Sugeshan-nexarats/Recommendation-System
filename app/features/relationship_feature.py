@@ -2,7 +2,8 @@ from __future__ import annotations
 import logging
 from app.features.abstract_feature import AbstractFeature, FeatureResult
 from app.features.feature_registry import FeatureRegistry
-import app.features.relationship.signals
+import app.features.relationship.signals  # noqa: F401, E402
+
 from app.features.relationship.relationship_config import RelationshipConfig
 from app.features.relationship.relationship_signal_registry import RelationshipSignalRegistry
 from app.models.posts import Post
@@ -12,18 +13,20 @@ logger = logging.getLogger(__name__)
 
 _MAX_SCORE: float = 100.0
 
+
 @FeatureRegistry.register
 class RelationshipFeature(AbstractFeature):
-
+  
     def __init__(self, config: RelationshipConfig | None = None) -> None:
         self._config = config or RelationshipConfig()
+
 
     @property
     def name(self) -> str:
         return "relationship_score"
 
     def compute(self, user: UserContext, post: Post, signal_context=None) -> FeatureResult:
-        
+
         cfg     = self._config
         signals = RelationshipSignalRegistry.all_signals()
 
@@ -35,12 +38,13 @@ class RelationshipFeature(AbstractFeature):
                 metadata={"reason": "no_signals_registered"},
             )
 
+     
         signal_results = {}
         for signal in signals:
             try:
                 result = signal.compute(user, post, cfg)
                 signal_results[result.signal_name] = result
-            except Exception: 
+            except Exception:  # noqa: BLE001
                 logger.exception(
                     "RelationshipFeature: signal '%s' raised an unexpected "
                     "exception for post_id=%s. Using score=0.0.",
@@ -56,16 +60,19 @@ class RelationshipFeature(AbstractFeature):
                     metadata={"error": "computation_failed"},
                 )
 
+      
         total_weight = cfg.total_weight
         weighted_sum = 0.0
         weighted_contrib: dict[str, float] = {}
 
         for signal_name, result in signal_results.items():
+           
             weight = getattr(cfg.weights, signal_name, 0.0)
             contribution = (weight / total_weight) * result.score
             weighted_sum += contribution
             weighted_contrib[signal_name] = round(contribution, 6)
 
+        
         raw_score = min(max(weighted_sum * _MAX_SCORE, 0.0), _MAX_SCORE)
 
         logger.debug(
@@ -93,19 +100,28 @@ class RelationshipFeature(AbstractFeature):
         cfg = self._config
 
         return {
-          
+           
             "raw_relationship_score": round(raw_score, 4),
+
+            
             "signal_scores": {
                 name: round(result.score, 6)
                 for name, result in signal_results.items()
             },
+
+           
             "weighted_contributions": weighted_contrib,
+
+            
             "signal_metadata": {
                 name: result.metadata
                 for name, result in signal_results.items()
             },
 
+            
             "active_signals": RelationshipSignalRegistry.signal_names(),
+
+           
             "config_snapshot": {
                 "weights": {
                     "creator_relationship": cfg.weights.creator_relationship,

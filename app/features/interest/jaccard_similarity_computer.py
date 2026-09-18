@@ -1,12 +1,16 @@
+
 from __future__ import annotations
 from app.features.interest.abstract_similarity_computer import AbstractSimilarityComputer
 from app.features.interest.user_interest_profile import UserInterestProfile
 
+
 class JaccardSimilarityComputer(AbstractSimilarityComputer):
-   
+
+
     @property
     def name(self) -> str:
         return "weighted_jaccard"
+
 
     def tag_similarity(
         self,
@@ -17,6 +21,7 @@ class JaccardSimilarityComputer(AbstractSimilarityComputer):
         if not post_tags or not profile.tag_weights:
             return 0.0
 
+       
         all_tags = set(profile.tag_weights.keys()) | post_tags
 
         weighted_intersection = 0.0

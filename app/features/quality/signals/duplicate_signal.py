@@ -1,9 +1,16 @@
+
+
 from __future__ import annotations
-from app.features.quality.abstract_quality_signal import (AbstractQualitySignal, QualitySignalResult,)
+
+from app.features.quality.abstract_quality_signal import (
+    AbstractQualitySignal,
+    QualitySignalResult,
+)
 from app.features.quality.quality_config import QualityConfig
 from app.features.quality.quality_signal_registry import QualitySignalRegistry
 from app.models.posts import Post
 from app.retrievers.user_context import UserContext
+
 
 @QualitySignalRegistry.register
 class DuplicateSignal(AbstractQualitySignal):

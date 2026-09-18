@@ -1,5 +1,9 @@
+
+
 from typing import Optional
+
 from sqlalchemy.orm import Session
+
 from app.models.posts import Post
 from app.repositories.abstract_post_repository import AbstractPostRepository
 
@@ -11,7 +15,7 @@ class SqlPostRepository(AbstractPostRepository):
 
 
     def get_posts_for_user(self,user_id: int,limit: int,offset: int,) -> list[Post]:
-       
+
         return (
             self._db.query(Post)
             .offset(offset)
@@ -22,12 +26,19 @@ class SqlPostRepository(AbstractPostRepository):
     def get_post_by_id(self, post_id: int) -> Optional[Post]:
         return self._db.query(Post).filter(Post.post_id == post_id).first()
 
+    def get_posts_by_ids(self, post_ids: list[int]) -> list[Post]:
+        if not post_ids:
+            return []
+        return self._db.query(Post).filter(Post.post_id.in_(post_ids)).all()
+
     def get_posts_by_friend_ids(
         self,
         friend_ids: list[int],
         limit: int,
     ) -> list[Post]:
-       
+        """
+        Return posts with a high friends signal as a proxy for social graph proximity.
+        """
         if not friend_ids:
             return []
             
@@ -44,7 +55,7 @@ class SqlPostRepository(AbstractPostRepository):
         community_ids: list[int],
         limit: int,
     ) -> list[Post]:
-       
+
         from sqlalchemy import String, cast, or_
         
         if not community_ids:
@@ -60,7 +71,7 @@ class SqlPostRepository(AbstractPostRepository):
         )
 
     def get_recent_posts(self, limit: int) -> list[Post]:
-       
+     
         return (
             self._db.query(Post)
             .order_by(Post.post_id.desc())
@@ -69,7 +80,9 @@ class SqlPostRepository(AbstractPostRepository):
         )
 
     def get_trending_posts(self, limit: int) -> list[Post]:
-        
+        """
+        Return posts with the highest composite engagement.
+        """
         return (
             self._db.query(Post)
             .order_by((Post.likes + Post.comments + Post.shares + Post.saves).desc())
@@ -82,7 +95,9 @@ class SqlPostRepository(AbstractPostRepository):
         tags: list[str],
         limit: int,
     ) -> list[Post]:
-       
+        """
+        Return posts whose tags JSON array contains at least one of the tags.
+        """
         from sqlalchemy import String, cast, or_
         
         if not tags:

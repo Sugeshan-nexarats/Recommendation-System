@@ -7,8 +7,8 @@ from app.signals.video_signals import VideoSignals
 
 logger = logging.getLogger(__name__)
 
-class UnsupportedContentTypeError(ValueError):
 
+class UnsupportedContentTypeError(ValueError):
     def __init__(self, post_id: int | None, content_type: str | None) -> None:
         self.post_id = post_id
         self.content_type = content_type
@@ -18,7 +18,6 @@ class UnsupportedContentTypeError(ValueError):
             f"Supported types: {list(_STRATEGY_MAP.keys())}"
         )
 
-
 _STRATEGY_MAP: dict[str, ImageSignals | VideoSignals] = {
     "image": ImageSignals(),
     "video": VideoSignals(),
@@ -26,9 +25,9 @@ _STRATEGY_MAP: dict[str, ImageSignals | VideoSignals] = {
 
 
 class ContentRouter:
-
+    
     def route(self, posts: list[Post]) -> dict[int, SignalContext]:
-       
+      
         result: dict[int, SignalContext] = {}
 
         for post in posts:

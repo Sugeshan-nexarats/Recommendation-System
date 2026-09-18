@@ -1,19 +1,31 @@
+
 from __future__ import annotations
-from app.features.quality.abstract_quality_signal import (AbstractQualitySignal, QualitySignalResult,)
+
+from app.features.quality.abstract_quality_signal import (
+    AbstractQualitySignal,
+    QualitySignalResult,
+)
 from app.features.quality.quality_config import QualityConfig
 from app.features.quality.quality_signal_registry import QualitySignalRegistry
 from app.models.posts import Post
 from app.retrievers.user_context import UserContext
 
+
 @QualitySignalRegistry.register
 class SpamSignal(AbstractQualitySignal):
+    """Spam probability penalty."""
 
     @property
     def name(self) -> str:
         return "spam"
 
-    def compute(self, user: UserContext, post: Post, config: QualityConfig, ) -> QualitySignalResult:
-     
+    def compute(
+        self,
+        user: UserContext,
+        post: Post,
+        config: QualityConfig,
+    ) -> QualitySignalResult:
+       
         spam_prob = getattr(post, "spam_probability", None)
         
         if spam_prob is None:

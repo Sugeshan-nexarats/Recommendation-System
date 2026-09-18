@@ -1,9 +1,15 @@
+
 from __future__ import annotations
-from app.features.quality.abstract_quality_signal import (AbstractQualitySignal, QualitySignalResult,)
+
+from app.features.quality.abstract_quality_signal import (
+    AbstractQualitySignal,
+    QualitySignalResult,
+)
 from app.features.quality.quality_config import QualityConfig
 from app.features.quality.quality_signal_registry import QualitySignalRegistry
 from app.models.posts import Post
 from app.retrievers.user_context import UserContext
+
 
 @QualitySignalRegistry.register
 class ReputationSignal(AbstractQualitySignal):
@@ -13,8 +19,13 @@ class ReputationSignal(AbstractQualitySignal):
     def name(self) -> str:
         return "reputation"
 
-    def compute(self,user: UserContext, post: Post, config: QualityConfig,) -> QualitySignalResult:
-        
+    def compute(
+        self,
+        user: UserContext,
+        post: Post,
+        config: QualityConfig,
+    ) -> QualitySignalResult:
+        # Creator reputation is a float between 0.0 and 1.0.
         reputation = getattr(post, "creator_reputation", None)
         
         if reputation is None:

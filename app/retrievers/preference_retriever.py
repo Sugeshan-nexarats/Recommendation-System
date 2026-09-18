@@ -1,13 +1,18 @@
+
 from __future__ import annotations
+
 import logging
+
 from app.models.posts import Post
 from app.repositories.abstract_post_repository import AbstractPostRepository
 from app.retrievers.abstract_retriever import AbstractRetriever
 from app.retrievers.user_context import UserContext
+
 logger = logging.getLogger(__name__)
 
+
 class PreferenceRetriever(AbstractRetriever):
-    
+   
     def __init__(self, repository: AbstractPostRepository) -> None:
         self._repository = repository
 
@@ -16,6 +21,7 @@ class PreferenceRetriever(AbstractRetriever):
         return "preference_retriever"
 
     def retrieve(self, user: UserContext, limit: int) -> list[Post]:
+       
         if not user.user_preferences:
             logger.debug(
                 "PreferenceRetriever: user_id=%d has no preferences; skipping.",
@@ -23,6 +29,7 @@ class PreferenceRetriever(AbstractRetriever):
             )
             return []
 
+      
         preference_tags = [pref.preference_name for pref in user.user_preferences]
 
         logger.debug(

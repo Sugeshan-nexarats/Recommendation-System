@@ -1,36 +1,34 @@
 from __future__ import annotations
+
 from typing import Any
+
 from pydantic import BaseModel, Field, field_validator
 
+
 class FeedRequest(BaseModel):
-
+   
     user_id: int = Field(..., gt=0, description="Authenticated user's ID")
-    limit: int = Field(default=20, ge=1, le=100, description="Page size")
-    offset: int = Field(default=0, ge=0, description="Pagination offset")
-    candidate_pool: int = Field(
-        default=0,
-        ge=0,
-        validate_default=True,
-        description=(
-            "Number of raw candidates to fetch.  "
-            "If 0 (default), set automatically to 3× limit."
-        ),
+    session_id: str | None = Field(
+        default=None, 
+        description="The unique session ID identifying this feed instance."
     )
+    limit: int = Field(default=20, ge=1, le=100, description="Page size")
+    page: int = Field(default=1, ge=1, description="Page number (1-indexed)")
 
-    @field_validator("candidate_pool", mode="after")
-    @classmethod
-    def ensure_pool_gte_limit(cls, v: int, info) -> int:
-        limit = info.data.get("limit", 20)
-        return v if v >= limit else limit * 3
+
+
 
 class FeatureResultSchema(BaseModel):
+
 
     feature_name: str
     score: float = Field(..., ge=0.0, le=1.0)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+
 class RankedPost(BaseModel):
+
 
     post_id: int
     likes: int
@@ -74,15 +72,22 @@ class RankedPost(BaseModel):
 
     model_config = {"from_attributes": True}
 
-class FeedResponse(BaseModel):
 
+
+
+class FeedResponse(BaseModel):
+   
     user_id: int
+    session_id: str | None = None
+    page: int
+    limit: int
     total_returned: int
     posts: list[RankedPost]
 
 
-class RecommendationBackendItem(BaseModel):
 
+class RecommendationBackendItem(BaseModel):
+    
 
     post_id: int
     rank: int = Field(..., ge=1, description="1-indexed rank position.")
@@ -95,6 +100,9 @@ class RecommendationBackendItem(BaseModel):
 
 
 class RecommendationBackendResponse(BaseModel):
-  
+   
     user_id: int
+    session_id: str | None = None
+    page: int
+    limit: int
     recommendations: list[RecommendationBackendItem]

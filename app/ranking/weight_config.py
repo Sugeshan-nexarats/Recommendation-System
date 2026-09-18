@@ -1,4 +1,7 @@
+
+
 from __future__ import annotations
+
 from pydantic import BaseModel, field_validator, model_validator
 
 DEFAULT_WEIGHTS: dict[str, float] = {
@@ -13,6 +16,7 @@ DEFAULT_WEIGHTS: dict[str, float] = {
 
 
 class FeatureWeightConfig(BaseModel):
+    
 
     weights: dict[str, float] = DEFAULT_WEIGHTS
 
@@ -40,11 +44,13 @@ class FeatureWeightConfig(BaseModel):
             )
         return self
 
+ 
     @property
     def normalised_weights(self) -> dict[str, float]:
-
+ 
         total = sum(self.weights.values())
         return {k: v / total for k, v in self.weights.items()}
 
     def weight_for(self, feature_name: str) -> float:
+ 
         return self.normalised_weights.get(feature_name, 0.0)

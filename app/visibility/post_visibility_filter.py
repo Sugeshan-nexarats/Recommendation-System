@@ -1,6 +1,9 @@
+
 from __future__ import annotations
+
 import logging
 from collections import defaultdict
+
 from app.models.posts import Post
 from app.models.user_relationship import (
     RELATIONSHIP_TYPE_BLOCK,
@@ -17,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class PostVisibilityFilter:
-    
+
     def __init__(
         self,
         user_privacy_repo: UserPrivacyRepository,
@@ -31,20 +34,29 @@ class PostVisibilityFilter:
         viewer_user_id: int,
         posts: list[Post],
     ) -> list[Post]:
+
         if not posts:
             return []
+
+      
         creator_ids: list[int] = list({
             post.creator_id
             for post in posts
             if post.creator_id is not None
         })
+
+       
         privacy_map: dict[int, str] = self._user_privacy_repo.get_privacy_map(creator_ids)
+
+       
         relationships: list[UserRelationship] = (
             self._relationship_repo.get_relationships_for_visibility(
                 viewer_user_id,
                 creator_ids,
             )
         )
+
+      
         rel_index: dict[int, list[UserRelationship]] = defaultdict(list)
         for rel in relationships:
             # Index by the creator's side (the "other" user from the viewer)
@@ -58,7 +70,7 @@ class PostVisibilityFilter:
         for post in posts:
             creator_id = post.creator_id
 
-           
+            # Posts with no creator_id are treated as public
             if creator_id is None:
                 visible.append(post)
                 continue
@@ -76,11 +88,11 @@ class PostVisibilityFilter:
             profile_visibility = privacy_map.get(creator_id, "public")
 
             if profile_visibility != "private":
-             
+                # PUBLIC creator — visible to everyone (no block confirmed above)
                 visible.append(post)
                 continue
 
-           
+            # PRIVATE creator — need FRIEND + ACCEPTED
             if self._has_accepted_friendship(viewer_user_id, creator_id, creator_rels):
                 visible.append(post)
             else:
@@ -102,7 +114,7 @@ class PostVisibilityFilter:
         creator_id: int,
         rels: list[UserRelationship],
     ) -> bool:
-      
+        
         for rel in rels:
             if rel.relationship_type == RELATIONSHIP_TYPE_BLOCK:
                 return True
@@ -114,7 +126,7 @@ class PostVisibilityFilter:
         creator_id: int,
         rels: list[UserRelationship],
     ) -> bool:
-       
+      
         for rel in rels:
             if (
                 rel.relationship_type == RELATIONSHIP_TYPE_FRIEND

@@ -1,7 +1,11 @@
+
 from __future__ import annotations
+
 import logging
+
 from sqlalchemy import Column, Float, Integer, String
 from sqlalchemy.orm import Session, declarative_base
+
 from app.models.preference import Preference
 from app.models.user_preference import UserPreference
 from app.repositories.abstract_user_preference_repository import (
@@ -9,24 +13,31 @@ from app.repositories.abstract_user_preference_repository import (
 )
 
 logger = logging.getLogger(__name__)
+
 _Base = declarative_base()
 
 
 class _UserPreferenceRow(_Base):
-    
+ 
+
     __tablename__ = "user_preferences"
 
+    # Composite PK — one row per (user, preference) pair.
     user_id: int = Column(Integer, primary_key=True, nullable=False)
     preference_id: int = Column(Integer, primary_key=True, nullable=False)
     preference_weight: float = Column(Float, nullable=False, default=1.0)
 
+
+
 class SqlUserPreferenceRepository(AbstractUserPreferenceRepository):
+
 
     def __init__(self, db: Session) -> None:
         self._db = db
 
-    def get_by_user_id(self, user_id: int) -> list[UserPreference]:
 
+    def get_by_user_id(self, user_id: int) -> list[UserPreference]:
+       
         rows = (
             self._db.query(
                 _UserPreferenceRow.preference_id,

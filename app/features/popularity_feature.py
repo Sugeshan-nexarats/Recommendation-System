@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 import logging
 from dataclasses import dataclass
@@ -9,8 +10,11 @@ from app.retrievers.user_context import UserContext
 
 logger = logging.getLogger(__name__)
 
+
+
 @dataclass(frozen=True, slots=True)
 class _NormalisedSignals:
+    """Per-metric log-normalised values, each ∈ [0, ~1]."""
 
     likes:      float
     comments:   float
@@ -18,8 +22,11 @@ class _NormalisedSignals:
     saves:      float
     watch_time: float
 
+
+
 @FeatureRegistry.register
 class PopularityFeature(AbstractFeature):
+
 
     def __init__(self, config: PopularityWeightConfig | None = None) -> None:
         self._config = config or PopularityWeightConfig()
@@ -29,15 +36,17 @@ class PopularityFeature(AbstractFeature):
         return "popularity_score"
 
     def compute(self, user: UserContext, post: Post, signal_context=None) -> FeatureResult:  # noqa: ARG002
-       
+
         cfg = self._config
 
+       
         likes      = float(post.likes      or 0)
         comments   = float(post.comments   or 0)
         shares     = float(post.shares     or 0)
         saves      = float(post.saves      or 0)
         watch_time = float(post.watch_time or 0)
 
+        
         norm = _NormalisedSignals(
             likes      = cfg.log_normalise(likes,      cfg.caps.likes),
             comments   = cfg.log_normalise(comments,   cfg.caps.comments),
@@ -46,6 +55,7 @@ class PopularityFeature(AbstractFeature):
             watch_time = cfg.log_normalise(watch_time, cfg.caps.watch_time),
         )
 
+      
         w = cfg.weights
         raw = (
             norm.likes      * w.likes
@@ -55,8 +65,11 @@ class PopularityFeature(AbstractFeature):
             + norm.watch_time * w.watch_time
         )
 
+     
         total_weight = cfg.total_weight
         score = raw / total_weight
+
+       
         score = min(max(score, 0.0), 1.0)
 
         logger.debug(
@@ -88,11 +101,12 @@ class PopularityFeature(AbstractFeature):
         score: float,
         total_weight: float,
     ) -> dict:
-        
+       
         w   = self._config.weights
         cap = self._config.caps
 
         return {
+          
             "raw_counts": {
                 "likes":      int(likes),
                 "comments":   int(comments),
@@ -101,7 +115,7 @@ class PopularityFeature(AbstractFeature):
                 "watch_time": int(watch_time),
             },
 
-            
+          
             "normalised": {
                 "likes":      round(norm.likes,      6),
                 "comments":   round(norm.comments,   6),
@@ -110,6 +124,7 @@ class PopularityFeature(AbstractFeature):
                 "watch_time": round(norm.watch_time, 6),
             },
 
+           
             "weighted_contrib": {
                 "likes":      round(norm.likes      * w.likes      / total_weight, 6),
                 "comments":   round(norm.comments   * w.comments   / total_weight, 6),
@@ -118,7 +133,10 @@ class PopularityFeature(AbstractFeature):
                 "watch_time": round(norm.watch_time * w.watch_time / total_weight, 6),
             },
 
+            
             "final_score": round(score, 6),
+
+          
             "config_snapshot": {
                 "weights": {
                     "likes":      w.likes,

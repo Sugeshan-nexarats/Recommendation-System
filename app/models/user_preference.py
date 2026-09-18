@@ -1,9 +1,13 @@
+
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 
 @dataclass(frozen=True, slots=True)
 class UserPreference:
-    
+   
+
     preference_id: int
     preference_name: str
     preference_weight: float

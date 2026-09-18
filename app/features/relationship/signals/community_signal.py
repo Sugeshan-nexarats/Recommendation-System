@@ -1,28 +1,3 @@
-"""
-CommunitySignal — shared community membership overlap.
-
-Signal semantics:
-    A post published in a community the user belongs to is significantly
-    more likely to be relevant than one from an unknown community.
-    Community membership is an explicit, persistent social decision with
-    high signal quality.
-
-Algorithm (recall-oriented):
-    score = |user.community_ids ∩ post.communities| / |user.community_ids|
-
-    Recall from the user's perspective: "what fraction of the user's
-    communities does this post belong to?"
-
-    Recall is preferred over precision here because:
-      - A post may belong to many communities (precision denominator grows).
-      - We care about coverage of the user's community life, not how niche
-        the post is within its community set.
-
-No schema limitation:
-    post.communities is a JSON list of community IDs from the Java app.
-    user.community_ids are the user's subscribed community IDs.
-    Both are normalised to str for safe comparison.
-"""
 
 from __future__ import annotations
 

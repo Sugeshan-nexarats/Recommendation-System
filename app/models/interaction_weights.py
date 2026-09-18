@@ -1,9 +1,11 @@
+
 INTERACTION_SOURCE_WEIGHTS: dict[str, float] = {
-    "explicit":    1.00,  
-    "saved":       0.90,  
-    "liked":       0.80,  
-    "interacted":  0.60,  
-    "watched":     0.50,  }
+    "explicit":    1.00,  # interest_tags: declared preferences
+    "saved":       0.90,  # saved_tags: intent to revisit
+    "liked":       0.80,  # liked_tags: positive endorsement
+    "interacted":  0.60,  # interacted_tags: active engagement
+    "watched":     0.50,  # watched_tags: passive consumption
+}
 
 def get_weight_for_interaction_type(interaction_type: str) -> float:
     """

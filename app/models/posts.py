@@ -19,5 +19,7 @@ class Post(Base):
     creator_reputation = Column(Float)
     report_count = Column(Integer)
     is_duplicate = Column(Boolean)
+
     creator_id = Column(Integer, nullable=True)
+
     content_type = Column(String, nullable=True)

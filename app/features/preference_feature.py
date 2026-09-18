@@ -10,13 +10,15 @@ from app.retrievers.user_context import UserContext
 logger = logging.getLogger(__name__)
 
 class AbstractTagMatcher:
-
+ 
     def matches(self, preference_name: str, post_tag_set: frozenset[str]) -> bool:
         """Return True if this preference name matches at least one tag."""
         raise NotImplementedError
 
 
 class ExactTagMatcher(AbstractTagMatcher):
+
+
     def matches(self, preference_name: str, post_tag_set: frozenset[str]) -> bool:
         return preference_name in post_tag_set
 
@@ -34,15 +36,17 @@ class _MatchResult:
 @FeatureRegistry.register
 class PreferenceFeature(AbstractFeature):
 
+
     def __init__(self, matcher: AbstractTagMatcher | None = None) -> None:
         self._matcher = matcher or ExactTagMatcher()
 
+   
     @property
     def name(self) -> str:
         return "preference_score"
 
     def compute(self, user: UserContext, post: Post, signal_context=None) -> FeatureResult:
-       
+ 
         if not user.user_preferences:
             return self._empty_result("no_user_preferences")
 
@@ -72,7 +76,7 @@ class PreferenceFeature(AbstractFeature):
 
     @staticmethod
     def _build_tag_set(post: Post) -> frozenset[str]:
-       
+
         raw_tags: list | None = getattr(post, "tags", None)
         if not raw_tags:
             return frozenset()
@@ -103,7 +107,7 @@ class PreferenceFeature(AbstractFeature):
 
     @staticmethod
     def _normalise(match: _MatchResult) -> float:
-        """Divide weighted score by the maximum possible clamp to [0, 1]."""
+        """Divide weighted score by the maximum possible; clamp to [0, 1]."""
         if match.max_possible == 0.0:
             return 0.0
         raw = match.weighted_score / match.max_possible

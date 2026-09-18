@@ -1,5 +1,8 @@
+
 from __future__ import annotations
+
 import logging
+
 from app.features.abstract_feature import AbstractFeature, FeatureResult
 from app.features.feature_registry import FeatureRegistry
 from app.models.posts import Post
@@ -7,9 +10,11 @@ from app.retrievers.user_context import UserContext
 
 logger = logging.getLogger(__name__)
 
+
 @FeatureRegistry.register
 class CommunityFeature(AbstractFeature):
-    
+
+
     @property
     def name(self) -> str:
         return "community_score"

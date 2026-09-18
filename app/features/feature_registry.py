@@ -3,19 +3,24 @@ import logging
 from typing import TYPE_CHECKING
 from app.models.posts import Post
 from app.retrievers.user_context import UserContext
+
 if TYPE_CHECKING:
     from app.features.abstract_feature import AbstractFeature, FeatureResult
     from app.signals.signal_context import SignalContext
 
 logger = logging.getLogger(__name__)
 
+
 class FeatureRegistry:
 
+
+    
     _registry: dict[str, "AbstractFeature"] = {}
+
   
     @classmethod
     def register(cls, feature_cls: type["AbstractFeature"]) -> type["AbstractFeature"]:
-
+      
         instance: "AbstractFeature" = feature_cls()
         name = instance.name
 
@@ -47,8 +52,9 @@ class FeatureRegistry:
         post: Post,
         signal_context: "SignalContext | None" = None,
     ) -> list["FeatureResult"]:
+      
        
-        from app.features.abstract_feature import FeatureResult 
+        from app.features.abstract_feature import FeatureResult  # noqa: PLC0415
 
         results: list[FeatureResult] = []
 
@@ -81,5 +87,5 @@ class FeatureRegistry:
 
     @classmethod
     def _reset(cls) -> None:
-       
+        
         cls._registry.clear()

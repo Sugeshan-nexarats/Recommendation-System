@@ -1,8 +1,15 @@
+
+
 from __future__ import annotations
+
 import logging
+
 from app.features.abstract_feature import AbstractFeature, FeatureResult
 from app.features.feature_registry import FeatureRegistry
-import app.features.quality.signals 
+
+# Import signals sub-package to trigger auto-discovery.
+import app.features.quality.signals  # noqa: F401, E402
+
 from app.features.quality.quality_config import QualityConfig
 from app.features.quality.quality_signal_registry import QualitySignalRegistry
 from app.models.posts import Post
@@ -12,8 +19,10 @@ logger = logging.getLogger(__name__)
 
 _MAX_SCORE: float = 100.0
 
+
 @FeatureRegistry.register
 class QualityFeature(AbstractFeature):
+
 
     def __init__(self, config: QualityConfig | None = None) -> None:
         self._config = config or QualityConfig()

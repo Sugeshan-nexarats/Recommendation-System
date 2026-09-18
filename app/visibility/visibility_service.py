@@ -7,11 +7,13 @@ logger = logging.getLogger(__name__)
 
 
 class UserPrivacyRepository:
-    
+  
+
     def __init__(self, db: Session) -> None:
         self._db = db
 
     def exists(self, user_id: int) -> bool:
+       
         return (
             self._db.query(Users.user_id)
             .filter(Users.user_id == user_id)
@@ -19,6 +21,7 @@ class UserPrivacyRepository:
         ) is not None
 
     def get_profile_visibility(self, user_id: int) -> str:
+      
         row = (
             self._db.query(Users.profile_visibility)
             .filter(Users.user_id == user_id)
@@ -29,6 +32,7 @@ class UserPrivacyRepository:
         return str(row.profile_visibility)
 
     def get_privacy_map(self, user_ids: list[int]) -> dict[int, str]:
+        
         if not user_ids:
             return {}
 
